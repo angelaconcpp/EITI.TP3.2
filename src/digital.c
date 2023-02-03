@@ -32,14 +32,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DIGITAL_H   /*! @cond    */
-#define DIGITAL_H  /*! @endcond */
-
-/** @file digital.h
+/** @file main.c
  **
- ** @brief Plantilla de archivos de cabecera 
+ ** @brief Plantilla de archivos fuente
  **
- ** Plantilla para los archivos de cabeceras de las prácticos de las 
+ ** Plantilla para los archivos de codigo fuente de prácticos de las 
  ** asignaturas Diseño Integrado de Sistemas Emebebidos y Sistemas Embebidos
  ** de Tiempo Real dictadas en de la Especialización en Integración de
  ** Sistemas Informaticos de la Univesidad Nacional de Tucumán
@@ -53,31 +50,49 @@
  ** @{ 
  */
 
-/* === Inclusiones de archivos externos ==================================== */
+/* === Inclusiones de cabeceras ============================================ */
+#include "../inc/digital.h"
+#include "chip.h"
 
-/* === Cabecera C++ ======================================================== */
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* === Definicion y Macros privados ======================================== */
 
-/* === Definicion y Macros publicos ======================================== */
-#include <stdint.h>
-/* == Declaraciones de tipos de datos publicos ============================= */
-typedef struct digital_output_s * digital_output_t;
+/* === Declaraciones de tipos de datos privados ============================ */
+struct digital_output_s {
+    uint8_t gpio;
+    uint8_t bit;
+    
+};
 
-/* === Declaraciones de variables publicas ================================= */
+/* === Definiciones de variables privadas ================================== */
+static struct digital_output_s instance;
 
-/* === Declaraciones de funciones publicas ================================= */
-digital_output_t DigitalOutputCreate(uint8_t gpio, uint8_t bit);
-void DigitalOutputActivate(digital_output_t output);
-void DigitalOutputDeactivate(digital_output_t output);
-void DigitalOutputToggle(digital_output_t output);
+
+
+/* === Definiciones de variables publicas ================================== */
+
+/* === Declaraciones de funciones privadas ================================= */
+
+/* === Definiciones de funciones privadas ================================== */
+
+/* === Definiciones de funciones publicas ================================== */
+digital_output_t DigitalOutputCreate(uint8_t gpio, uint8_t bit){
+    instance.gpio = gpio;
+    instance.bit =  bit;
+    Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpio, bit, false);
+    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, gpio, bit, true);
+    return &instance;
+}
+void DigitalOutputActivate(digital_output_t output){
+    Chip_GPIO_SetPinState(LPC_GPIO_PORT, output->gpio,output->bit,  true);
+}
+void DigitalOutputDeactivate(digital_output_t output){
+    Chip_GPIO_SetPinState(LPC_GPIO_PORT, output->gpio,output->bit, false);
+}
+void DigitalOutputToggle(digital_output_t output){
+
+}
 
 /* === Ciere de documentacion ============================================== */
-#ifdef __cplusplus
-}
-#endif
 
 /** @} Final de la definición del modulo para doxygen */
 
-#endif   /* DIGITAL_H */
