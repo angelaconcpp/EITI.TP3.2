@@ -153,7 +153,7 @@ int main(void) {
 
     /******************/
     Chip_SCU_PinMuxSet(TEC_1_PORT, TEC_1_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_1_FUNC);
-    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_1_GPIO, TEC_1_BIT, false);
+   // Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_1_GPIO, TEC_1_BIT, false);
 
     Chip_SCU_PinMuxSet(TEC_2_PORT, TEC_2_PIN, SCU_MODE_INBUFF_EN | SCU_MODE_PULLUP | TEC_2_FUNC);
     Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, TEC_2_GPIO, TEC_2_BIT, false);
@@ -168,6 +168,7 @@ int main(void) {
     digital_output_t led_uno = DigitalOutputCreate(LED_1_GPIO, LED_1_BIT) ;
     digital_output_t led_dos = DigitalOutputCreate(LED_2_GPIO, LED_2_BIT) ;
     digital_output_t led_tres = DigitalOutputCreate(LED_3_GPIO, LED_3_BIT) ;
+    digital_input_t boton_1 = DigitalInputCreate(TEC_1_GPIO, TEC_1_BIT);
     while (true) {
         if (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_1_GPIO, TEC_1_BIT) == 0) {
             DigitalOutputActivate(led_azul);
@@ -176,8 +177,8 @@ int main(void) {
             DigitalOutputDeactivate(led_azul);
             //Chip_GPIO_SetPinState(LPC_GPIO_PORT, LED_B_GPIO, LED_B_BIT, false);
         }
-
-        current_state = (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_2_GPIO, TEC_2_BIT) == 0);
+        current_state = DigitalInputGetState(boton_1);
+        //current_state = (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, TEC_2_GPIO, TEC_2_BIT) == 0);
         if ((current_state) && (!last_state)) {
             DigitalOutputToggle(led_uno);
             //Chip_GPIO_SetPinToggle(LPC_GPIO_PORT, LED_1_GPIO, LED_1_BIT);

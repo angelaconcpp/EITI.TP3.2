@@ -54,17 +54,32 @@
 #include "../inc/digital.h"
 #include "chip.h"
 
-/* === Definicion y Macros privados ======================================== */
 
+/* === Definicion y Macros privados ======================================== */
+#ifndef OUTPUT_INSTANCES
+    #define OUTPUT_INSTANCES   4 
+#endif
+#ifndef INPUT_INSTANCES
+    #define INPUT_INSTANCES   3 
+#endif
 /* === Declaraciones de tipos de datos privados ============================ */
 struct digital_output_s {
     uint8_t gpio;
     uint8_t bit;
+    bool allocated;
     
+};
+struct digital_input_s {
+    uint8_t gpio;
+    uint8_t bit;
+     bool allocated;
+    //bool inverted;
 };
 
 /* === Definiciones de variables privadas ================================== */
-static struct digital_output_s instance;
+static struct digital_output_s instance[OUTPUT_INSTANCES]={0};
+static struct digital_input_s instanceI[INPUT_INSTANCES]={0};
+
 
 
 
@@ -73,15 +88,45 @@ static struct digital_output_s instance;
 /* === Declaraciones de funciones privadas ================================= */
 
 /* === Definiciones de funciones privadas ================================== */
+digital_output_t DigitalOutputAllocate(void){
+    digital_output_t output = NULL;
+    for(int index=0; index < OUTPUT_INSTANCES; index++){
+        if(instance[index].allocated == false) {
+            instance[index].allocated = true;
+            output = &instance[index];
+            break;
+        }
+    }
+    return output;
 
+}
+digital_input_t DigitalInputAllocate(void){
+    digital_input_t input = false;
+    for(int index=0; index < INPUT_INSTANCES; index++){
+        if(instanceI[index].allocated == false) {
+           
+            //instanceI[index].inverted = true;
+            input = &instanceI[index];
+            break;
+        }
+    }
+    return input;
+
+}
 /* === Definiciones de funciones publicas ================================== */
 digital_output_t DigitalOutputCreate(uint8_t gpio, uint8_t bit){
-    instance.gpio = gpio;
-    instance.bit =  bit;
-    Chip_GPIO_SetPinState(LPC_GPIO_PORT, gpio, bit, false);
-    Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, gpio, bit, true);
-    return &instance;
+    digital_output_t output = DigitalOutputAllocate();
+    if (output){
+        output->gpio = gpio;
+        output->bit = bit;
+        Chip_GPIO_SetPinState(LPC_GPIO_PORT, output->gpio, output->bit, false);
+        Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, output->gpio, output->bit, true);
+    }
+   
+    
+    return output;
 }
+
 void DigitalOutputActivate(digital_output_t output){
     Chip_GPIO_SetPinState(LPC_GPIO_PORT, output->gpio,output->bit,  true);
 }
@@ -89,7 +134,29 @@ void DigitalOutputDeactivate(digital_output_t output){
     Chip_GPIO_SetPinState(LPC_GPIO_PORT, output->gpio,output->bit, false);
 }
 void DigitalOutputToggle(digital_output_t output){
+    Chip_GPIO_SetPinToggle(LPC_GPIO_PORT, output->gpio,output->bit);
 
+}
+digital_input_t DigitalInputCreate(uint8_t gpio, uint8_t bit){
+    digital_input_t input = DigitalInputAllocate();
+    if (input){
+        input->gpio = gpio;
+        input->bit = bit;
+      
+        Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, input->gpio, input->bit, false);
+    }
+   
+    
+    return input;
+}
+bool DigitalInputGetState(digital_input_t input){
+    bool state = false;
+    if (input)
+    {
+        state = (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, input->gpio, input->bit)==0);
+    }
+    return state;
+    
 }
 
 /* === Ciere de documentacion ============================================== */
