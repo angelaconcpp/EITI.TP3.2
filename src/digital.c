@@ -68,12 +68,14 @@ struct digital_output_s {
     uint8_t bit;
     bool allocated;
     
+    
 };
 struct digital_input_s {
     uint8_t gpio;
     uint8_t bit;
-     bool allocated;
-    //bool inverted;
+    bool allocated;
+    bool inverted;
+    bool last_state;
 };
 
 /* === Definiciones de variables privadas ================================== */
@@ -127,6 +129,7 @@ digital_output_t DigitalOutputCreate(uint8_t gpio, uint8_t bit){
     return output;
 }
 
+
 void DigitalOutputActivate(digital_output_t output){
     Chip_GPIO_SetPinState(LPC_GPIO_PORT, output->gpio,output->bit,  true);
 }
@@ -137,27 +140,45 @@ void DigitalOutputToggle(digital_output_t output){
     Chip_GPIO_SetPinToggle(LPC_GPIO_PORT, output->gpio,output->bit);
 
 }
-digital_input_t DigitalInputCreate(uint8_t gpio, uint8_t bit){
+digital_input_t DigitalInputCreate(uint8_t gpio, uint8_t bit, bool inverted){
     digital_input_t input = DigitalInputAllocate();
     if (input){
         input->gpio = gpio;
         input->bit = bit;
+        input->inverted = inverted;
       
         Chip_GPIO_SetPinDIR(LPC_GPIO_PORT, input->gpio, input->bit, false);
     }
-   
-    
     return input;
 }
 bool DigitalInputGetState(digital_input_t input){
-    bool state = false;
+    return input->inverted ^ Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, input->gpio, input->bit);
+    /*bool state = false;
     if (input)
     {
         state = (Chip_GPIO_ReadPortBit(LPC_GPIO_PORT, input->gpio, input->bit)==0);
     }
     return state;
-    
+    */   
 }
+bool DigitalInputHasChanged(digital_input_t input){
+    bool state = DigitalInputGetState(input);
+    bool result = state != input->last_state;
+    input->last_state = state;
+    return result;
+}
+bool DigitalInputHasActivated(digital_input_t input){
+    bool state = DigitalInputGetState(input);
+    bool result = state && input->last_state;
+    input->last_state = state;
+    return result;
+};
+bool DigitalInputHasDeactivated(digital_input_t input){
+    bool state = DigitalInputGetState(input);
+    bool result = !state &&  !input->last_state;
+    input->last_state = state;
+    return result;
+};
 
 /* === Ciere de documentacion ============================================== */
 
